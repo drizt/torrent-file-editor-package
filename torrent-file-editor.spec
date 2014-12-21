@@ -1,6 +1,6 @@
 Name:           torrent-file-editor
 Version:        0.1.0
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Qt based GUI tool designed to create and edit .torrent files
 
 License:        GPLv3+
@@ -44,17 +44,22 @@ make %{?_smp_mflags}
 desktop-file-validate %{buildroot}%{_datadir}/applications/%{name}.desktop
 
 %post
-touch --no-create %{_datadir}/icons/hicolor || :
-if [ -x %{_bindir}/gtk-update-icon-cache ]; then
-    %{_bindir}/gtk-update-icon-cache --quiet %{_datadir}/icons/hicolor || :
-fi
+# Desktop file has MimeType field. Need to update MIME types database.
+/usr/bin/update-desktop-database &> /dev/null || :
 
+# Update icons cache
+/bin/touch --no-create %{_datadir}/icons/hicolor &>/dev/null || :
 
 %postun
-touch --no-create %{_datadir}/icons/hicolor || :
-if [ -x %{_bindir}/gtk-update-icon-cache ]; then
-    %{_bindir}/gtk-update-icon-cache --quiet %{_datadir}/icons/hicolor || :
+/usr/bin/update-desktop-database &> /dev/null || :
+
+if [ $1 -eq 0 ] ; then
+    /bin/touch --no-create %{_datadir}/icons/hicolor &>/dev/null
+    /usr/bin/gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 fi
+
+%posttrans
+/usr/bin/gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 
 %files
 %doc README.md LICENSE
@@ -64,6 +69,10 @@ fi
 
 
 %changelog
+* Sun Dec 21 2014 Ivan Romanov <drizt@land.ru> - 0.1.0-3
+- corrected updating icon cache
+- added updating MIME type database
+
 * Sat Dec 20 2014 Ivan Romanov <drizt@land.ru> - 0.1.0-2
 - Corrected sf source path
 - Corrected project url
